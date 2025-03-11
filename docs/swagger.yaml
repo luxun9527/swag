@@ -15,25 +15,6 @@ info:
   title: 账户相关api API接口文档
   version: v1.0.1
 paths:
-  /api/v1/base/login:
-    post:
-      consumes:
-      - application/json
-      parameters:
-      - description: 请求参数
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/request.GetAccountInfoReq'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: 成功
-          schema:
-            $ref: '#/definitions/response.AccountInfo'
-      summary: 登录
   /api/v1/base/register:
     post:
       consumes:

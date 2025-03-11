@@ -400,7 +400,6 @@ func (parser *Parser) ParseAPIMultiSearchDir(searchDirs []string, mainAPIFile st
 			return err
 		}
 	}
-	//todo 通过解析代码来推注释
 
 	absMainAPIFilePath, err := filepath.Abs(filepath.Join(searchDirs[0], mainAPIFile))
 	if err != nil {
@@ -455,7 +454,10 @@ func (parser *Parser) ParseAPIMultiSearchDir(searchDirs []string, mainAPIFile st
 	if err != nil {
 		return err
 	}
+	//todo 通过解析代码来推注释
+	for _, _ = range parser.packages.files {
 
+	}
 	err = parser.packages.RangeFiles(parser.ParseRouterAPIInfo)
 	if err != nil {
 		return err
