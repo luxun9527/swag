@@ -458,6 +458,7 @@ func (parser *Parser) ParseAPIMultiSearchDir(searchDirs []string, mainAPIFile st
 	for _, _ = range parser.packages.files {
 
 	}
+
 	err = parser.packages.RangeFiles(parser.ParseRouterAPIInfo)
 	if err != nil {
 		return err
