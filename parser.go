@@ -387,6 +387,7 @@ func (parser *Parser) skipPackageByPrefix(pkgpath string) bool {
 
 // ParseAPIMultiSearchDir is like ParseAPI but for multiple search dirs.
 func (parser *Parser) ParseAPIMultiSearchDir(searchDirs []string, mainAPIFile string, parseDepth int) error {
+	var fdList []*FileDetail
 	for _, searchDir := range searchDirs {
 		parser.debug.Printf("Generate general API Info, search dir:%s", searchDir)
 
@@ -394,6 +395,7 @@ func (parser *Parser) ParseAPIMultiSearchDir(searchDirs []string, mainAPIFile st
 		if err != nil {
 			parser.debug.Printf("warning: failed to get package name in dir: %s, error: %s", searchDir, err.Error())
 		}
+		fdList = append(fdList, parseReqResp(searchDir)...)
 
 		err = parser.getAllGoFileInfo(packageDir, searchDir)
 		if err != nil {
@@ -405,7 +407,21 @@ func (parser *Parser) ParseAPIMultiSearchDir(searchDirs []string, mainAPIFile st
 	if err != nil {
 		return err
 	}
+	var (
+		defaultAccept  = "@accept application/json"
+		defaultProduce = "@produce application/json"
+	)
+	for file, astFile := range parser.packages.files {
+		for _, v := range fdList {
+			if strings.HasSuffix(astFile.Path, v.Filename) {
+				for _, v1 := range file.Comments {
+					if len(v1.List) < 5 {
 
+					}
+				}
+			}
+		}
+	}
 	// Use 'go list' command instead of depth.Resolve()
 	if parser.ParseDependency > 0 {
 		if parser.parseGoList {
@@ -453,10 +469,6 @@ func (parser *Parser) ParseAPIMultiSearchDir(searchDirs []string, mainAPIFile st
 	parser.parsedSchemas, err = parser.packages.ParseTypes()
 	if err != nil {
 		return err
-	}
-	//todo 通过解析代码来推注释
-	for _, _ = range parser.packages.files {
-
 	}
 
 	err = parser.packages.RangeFiles(parser.ParseRouterAPIInfo)

@@ -165,8 +165,6 @@ func (g *Gen) Build(config *Config) error {
 		if _, err := os.Stat(searchDir); os.IsNotExist(err) {
 			return fmt.Errorf("dir: %s does not exist", searchDir)
 		}
-
-		parseReqResp(searchDir)
 	}
 	if config.LeftTemplateDelim == "" {
 		config.LeftTemplateDelim = "{{"

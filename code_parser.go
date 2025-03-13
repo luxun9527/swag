@@ -1,4 +1,4 @@
-package gen
+package swag
 
 import (
 	"fmt"
@@ -50,7 +50,7 @@ func (resp Resp) GetSwagComment() string {
 	return fmt.Sprintf("%s %d %s %s %s ", respPrefix, 200, resp.RespType, resp.RespVarType, "成功")
 }
 
-func parseReqResp(dir string) {
+func parseReqResp(dir string) []*FileDetail {
 
 	cfg := &packages.Config{
 		Mode: packages.NeedName | packages.NeedFiles |
@@ -77,27 +77,31 @@ func parseReqResp(dir string) {
 		fileDetail := processPackage(v)
 		fdList = append(fdList, fileDetail...)
 	}
-	log.Printf("fdList %v", fdList)
+	return fdList
 }
 
 func processPackage(pkg *packages.Package) []*FileDetail {
 	var fdList []*FileDetail
-	for _, file := range pkg.Syntax {
+	for i, file := range pkg.Syntax {
 		fd := &FileDetail{}
 		ast.Inspect(file, func(n ast.Node) bool {
+			fd.Filename = pkg.GoFiles[i]
+			fd.PkgPath = pkg.PkgPath
 			switch node := n.(type) {
 			case *ast.FuncDecl:
 				funcDetail := processFunction(pkg, node)
 				if funcDetail == nil {
 					return true
 				}
-				fd.PkgPath = pkg.PkgPath
 				fd.FuncDetailList = append(fd.FuncDetailList, funcDetail)
-				fdList = append(fdList, fd)
 			case *ast.CallExpr:
 			}
 			return true
 		})
+		if len(fd.FuncDetailList) == 0 {
+			continue
+		}
+		fdList = append(fdList, fd)
 
 	}
 	return fdList
