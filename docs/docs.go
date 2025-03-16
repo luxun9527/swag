@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/api/v1/base/register": {
+        "/account/addAccount": {
             "post": {
                 "consumes": [
                     "application/json"
@@ -23,26 +23,29 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "account"
-                ],
-                "summary": "注册",
-                "parameters": [
-                    {
-                        "description": "请求参数",
-                        "name": "data",
-                        "in": "body",
-                        "required": true,
+                "responses": {
+                    "200": {
+                        "description": "成功",
                         "schema": {
-                            "$ref": "#/definitions/request.GetAccountInfoReq"
+                            "$ref": "#/definitions/model.Account"
                         }
                     }
+                }
+            }
+        },
+        "/account/getAccountInfo": {
+            "get": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
                 ],
                 "responses": {
                     "200": {
                         "description": "成功",
                         "schema": {
-                            "$ref": "#/definitions/response.AccountInfo"
+                            "$ref": "#/definitions/account.GetUserInfoResp"
                         }
                     }
                 }
@@ -50,19 +53,37 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "request.GetAccountInfoReq": {
+        "account.GetUserInfoResp": {
             "type": "object",
             "properties": {
-                "id": {
+                "accountId": {
+                    "type": "string"
+                },
+                "accountName": {
                     "type": "string"
                 }
             }
         },
-        "response.AccountInfo": {
+        "model.Account": {
             "type": "object",
             "properties": {
-                "name": {
+                "account_id": {
                     "type": "string"
+                },
+                "account_name": {
+                    "type": "string"
+                },
+                "created_at": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "updated_at": {
+                    "type": "integer"
                 }
             }
         }

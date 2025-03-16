@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/swaggo/swag/custom/gin"
 	"go/ast"
 	"go/build"
 	goparser "go/parser"
@@ -387,7 +388,7 @@ func (parser *Parser) skipPackageByPrefix(pkgpath string) bool {
 
 // ParseAPIMultiSearchDir is like ParseAPI but for multiple search dirs.
 func (parser *Parser) ParseAPIMultiSearchDir(searchDirs []string, mainAPIFile string, parseDepth int) error {
-	var fdList []*FileDetail
+	var fdList []*gin.FileDetail
 	for _, searchDir := range searchDirs {
 		parser.debug.Printf("Generate general API Info, search dir:%s", searchDir)
 
@@ -395,11 +396,37 @@ func (parser *Parser) ParseAPIMultiSearchDir(searchDirs []string, mainAPIFile st
 		if err != nil {
 			parser.debug.Printf("warning: failed to get package name in dir: %s, error: %s", searchDir, err.Error())
 		}
-		fdList = append(fdList, parseReqResp(searchDir)...)
+		fdList = append(fdList, gin.ParseReqResp(searchDir)...)
 
 		err = parser.getAllGoFileInfo(packageDir, searchDir)
 		if err != nil {
 			return err
+		}
+	}
+	//给方法加上我们自己的注释
+	for file, astFileInfo := range parser.packages.files {
+		for _, v := range fdList {
+			if v.Filename != astFileInfo.Path {
+				continue
+			}
+			for _, node := range file.Decls {
+				f, ok := node.(*ast.FuncDecl)
+				if !ok {
+					continue
+				}
+
+				for _, funcDetail := range v.FuncDetailList {
+					if f.Name.Name != funcDetail.FuncName {
+						continue
+					}
+					if f.Doc == nil {
+						f.Doc = &ast.CommentGroup{}
+					}
+					f.Doc.List = append(f.Doc.List, funcDetail.BuildComment()...)
+				}
+
+			}
+
 		}
 	}
 
@@ -407,21 +434,7 @@ func (parser *Parser) ParseAPIMultiSearchDir(searchDirs []string, mainAPIFile st
 	if err != nil {
 		return err
 	}
-	var (
-		defaultAccept  = "@accept application/json"
-		defaultProduce = "@produce application/json"
-	)
-	for file, astFile := range parser.packages.files {
-		for _, v := range fdList {
-			if strings.HasSuffix(astFile.Path, v.Filename) {
-				for _, v1 := range file.Comments {
-					if len(v1.List) < 5 {
 
-					}
-				}
-			}
-		}
-	}
 	// Use 'go list' command instead of depth.Resolve()
 	if parser.ParseDependency > 0 {
 		if parser.parseGoList {

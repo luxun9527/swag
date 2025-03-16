@@ -1,13 +1,25 @@
 definitions:
-  request.GetAccountInfoReq:
+  account.GetUserInfoResp:
     properties:
-      id:
+      accountId:
+        type: string
+      accountName:
         type: string
     type: object
-  response.AccountInfo:
+  model.Account:
     properties:
-      name:
+      account_id:
         type: string
+      account_name:
+        type: string
+      created_at:
+        type: integer
+      id:
+        type: integer
+      password:
+        type: string
+      updated_at:
+        type: integer
     type: object
 info:
   contact: {}
@@ -15,27 +27,28 @@ info:
   title: 账户相关api API接口文档
   version: v1.0.1
 paths:
-  /api/v1/base/register:
+  /account/addAccount:
     post:
       consumes:
       - application/json
-      parameters:
-      - description: 请求参数
-        in: body
-        name: data
-        required: true
-        schema:
-          $ref: '#/definitions/request.GetAccountInfoReq'
       produces:
       - application/json
       responses:
         "200":
           description: 成功
           schema:
-            $ref: '#/definitions/response.AccountInfo'
-      summary: 注册
-      tags:
-      - account
+            $ref: '#/definitions/model.Account'
+  /account/getAccountInfo:
+    get:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: 成功
+          schema:
+            $ref: '#/definitions/account.GetUserInfoResp'
 securityDefinitions:
   ApiKeyAuth:
     in: header
