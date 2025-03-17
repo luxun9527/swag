@@ -5,7 +5,6 @@ import (
 	"go/ast"
 	"go/types"
 	"golang.org/x/tools/go/packages"
-	"log"
 	"strings"
 )
 
@@ -48,13 +47,16 @@ func (f *FuncDetail) BuildComment() []*ast.Comment {
 	accept := &ast.Comment{Text: acceptPrefix}
 	produce := &ast.Comment{Text: producePrefix}
 
-	resp := &ast.Comment{Text: f.Resp.GetSwagComment()}
 	router := &ast.Comment{Text: f.Router}
-	comments := []*ast.Comment{summary, accept, produce, resp, router}
+	comments := []*ast.Comment{summary, accept, produce, router}
 	for _, v := range f.ReqParam {
 		c := &ast.Comment{Text: v.GetSwagComment()}
-		log.Println(v.GetSwagComment())
+		//log.Println(v.GetSwagComment())
 		comments = append(comments, c)
+	}
+	if f.Resp.RespVarType != "" {
+		resp := &ast.Comment{Text: f.Resp.GetSwagComment()}
+		comments = append(comments, resp)
 	}
 	return comments
 }
@@ -196,7 +198,7 @@ func parseHandlerDetails(pkg *packages.Package, fn *ast.FuncDecl) (req []*ReqPar
 			}
 		}
 	}
-	log.Printf("%v %s ", req, resp)
+	//log.Printf("%v %s ", req, resp)
 	return
 }
 
@@ -287,6 +289,11 @@ func getParamLocation(bindMethod string) string {
 		return "query"
 	case "JSON":
 		return "body"
+	case "Header":
+		return "header"
+	case "Uri":
+		return "path"
+
 	default:
 		return ""
 	}

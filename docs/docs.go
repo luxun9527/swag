@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/account/login": {
+        "/account/getUserInfo": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -23,15 +23,8 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "summary": "获取用户信息",
+                "summary": "GetAccountInfo 注册",
                 "parameters": [
-                    {
-                        "type": "string",
-                        "description": "请求参数",
-                        "name": "id",
-                        "in": "query",
-                        "required": true
-                    },
                     {
                         "description": "请求参数",
                         "name": "data",
@@ -52,7 +45,7 @@ const docTemplate = `{
                 }
             }
         },
-        "/api/v1/base/register": {
+        "/base/login": {
             "post": {
                 "consumes": [
                     "application/json"
@@ -60,10 +53,7 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
-                "tags": [
-                    "account"
-                ],
-                "summary": "注册",
+                "summary": "Login 注册",
                 "parameters": [
                     {
                         "description": "请求参数",
@@ -71,18 +61,48 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/request.GetAccountInfoReq"
+                            "$ref": "#/definitions/request.LoginReq"
                         }
+                    },
+                    {
+                        "type": "string",
+                        "description": "请求参数",
+                        "name": "name",
+                        "in": "query",
+                        "required": true
                     }
                 ],
                 "responses": {
                     "200": {
                         "description": "成功",
                         "schema": {
-                            "$ref": "#/definitions/response.AccountInfo"
+                            "$ref": "#/definitions/response.LoginResp"
                         }
                     }
                 }
+            }
+        },
+        "/base/register": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "summary": "Register 注册",
+                "parameters": [
+                    {
+                        "description": "请求参数",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.RegisterReq"
+                        }
+                    }
+                ],
+                "responses": {}
             }
         }
     },
@@ -92,8 +112,27 @@ const docTemplate = `{
             "properties": {
                 "id": {
                     "type": "string"
+                }
+            }
+        },
+        "request.LoginReq": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
                 },
-                "name": {
+                "username": {
+                    "type": "string"
+                }
+            }
+        },
+        "request.RegisterReq": {
+            "type": "object",
+            "properties": {
+                "password": {
+                    "type": "string"
+                },
+                "username": {
                     "type": "string"
                 }
             }
@@ -102,6 +141,14 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "response.LoginResp": {
+            "type": "object",
+            "properties": {
+                "token": {
                     "type": "string"
                 }
             }
@@ -123,7 +170,7 @@ var SwaggerInfo = &swag.Spec{
 	BasePath:         "",
 	Schemes:          []string{},
 	Title:            "账户相关api API接口文档",
-	Description:      "petsminder 账户相关api",
+	Description:      "账户相关api",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
