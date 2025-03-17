@@ -18,12 +18,15 @@ const (
 )
 
 func (req ReqParam) GetSwagComment() string {
-	return fmt.Sprintf("%s %s %s %s %v %s", reqPrefix, "data", req.ReqType, req.ReqVarType, true, "\"请求参数\"")
+	if req.ReqVarName == "" {
+		req.ReqVarName = "data"
+	}
+	return fmt.Sprintf("%s %s %s %s %v %s", reqPrefix, req.ReqVarName, req.Location, req.ReqVarType, true, "\"请求参数\"")
 }
 
 type ReqParam struct {
 	ReqVarType string //shouldBindJson shouldBindQuery 参数名
-	ReqType    string //query(post方法form提交也是query)  json header
+	Location   string //query(post方法form提交也是query)  json header
 	ReqVarName string // query postForm 参数名
 }
 
@@ -50,6 +53,7 @@ func (f *FuncDetail) BuildComment() []*ast.Comment {
 	comments := []*ast.Comment{summary, accept, produce, resp, router}
 	for _, v := range f.ReqParam {
 		c := &ast.Comment{Text: v.GetSwagComment()}
+		log.Println(v.GetSwagComment())
 		comments = append(comments, c)
 	}
 	return comments
@@ -63,41 +67,6 @@ type FileDetail struct {
 
 func (resp Resp) GetSwagComment() string {
 	return fmt.Sprintf("%s %d %s %s %s ", respPrefix, 200, resp.RespType, resp.RespVarType, "\"成功\"")
-}
-
-func ParseReqResp(dir string) []*FileDetail {
-
-	cfg := &packages.Config{
-		Mode: packages.NeedName | packages.NeedFiles |
-			packages.NeedSyntax | packages.NeedTypes |
-			packages.NeedTypesInfo | packages.NeedImports,
-		Dir: dir,
-	}
-	pkgs, err := packages.Load(cfg, "./...")
-	if err != nil {
-		log.Fatal("包加载失败:", err)
-	}
-
-	var (
-		fdList     []*FileDetail
-		routerInfo = map[string]*RouterInfo{}
-	)
-	for _, v := range pkgs {
-		fileDetail, routerDetail := processPackage(v)
-		for k, v1 := range routerDetail {
-			routerInfo[k] = v1
-		}
-		fdList = append(fdList, fileDetail...)
-	}
-	for _, v := range fdList {
-		for _, v1 := range v.FuncDetailList {
-			r, ok := routerInfo[v1.FuncName]
-			if ok {
-				v1.Router = r.BuildPath()
-			}
-		}
-	}
-	return fdList
 }
 
 func processPackage(pkg *packages.Package) ([]*FileDetail, map[string]*RouterInfo) {
@@ -183,7 +152,6 @@ func extractSummary(doc *ast.CommentGroup) string {
 
 func parseHandlerDetails(pkg *packages.Package, fn *ast.FuncDecl) (req []*ReqParam, resp string) {
 	// 解析请求参数
-	var reqList []*ReqParam
 	ast.Inspect(fn.Body, func(n ast.Node) bool {
 		call, ok := n.(*ast.CallExpr)
 		if !ok {
@@ -205,15 +173,15 @@ func parseHandlerDetails(pkg *packages.Package, fn *ast.FuncDecl) (req []*ReqPar
 		}
 		reqVarType := getReqVarType(pkg, call)
 		if reqDetail.ReqVarName != "" {
-			reqVarType = reqDetail.ReqVarName
+			reqVarType = reqDetail.ReqVarType
 		}
-		method := getParamLocation(reqDetail.ReqType)
+		location := getParamLocation(reqDetail.Location)
 		reqParam := &ReqParam{
 			ReqVarType: reqVarType,
-			ReqType:    method,
+			Location:   location,
 			ReqVarName: reqDetail.ReqVarName,
 		}
-		reqList = append(reqList, reqParam)
+		req = append(req, reqParam)
 
 		return true
 	})
@@ -244,11 +212,11 @@ func getReqInfoList(sel *ast.Ident, args []ast.Expr) *ReqParam {
 	switch {
 	case strings.HasPrefix(sel.Name, shouldBindPrefix):
 		return &ReqParam{
-			ReqType: strings.TrimPrefix(sel.Name, shouldBindPrefix),
+			Location: strings.TrimPrefix(sel.Name, shouldBindPrefix),
 		}
 	case strings.HasPrefix(sel.Name, bindPrefix):
 		return &ReqParam{
-			ReqType: strings.TrimPrefix(sel.Name, bindPrefix),
+			Location: strings.TrimPrefix(sel.Name, bindPrefix),
 		}
 	case strings.HasPrefix(sel.Name, queryPrefix), strings.HasPrefix(sel.Name, postFormPrefix):
 		if len(args) > 0 {
@@ -258,14 +226,14 @@ func getReqInfoList(sel *ast.Ident, args []ast.Expr) *ReqParam {
 				// 如果是字面量（如 "id"），直接返回值
 				return &ReqParam{
 					ReqVarType: "string",
-					ReqType:    "Query",
+					Location:   "Query",
 					ReqVarName: strings.Trim(arg.Value, `"`),
 				}
 			case *ast.Ident:
 				// 如果是变量（如 id），返回变量名
 				return &ReqParam{
 					ReqVarType: "string",
-					ReqType:    "Query",
+					Location:   "Query",
 					ReqVarName: strings.Trim(arg.Name, `"`),
 				}
 			}
@@ -297,7 +265,12 @@ func getTypeName(pkg *packages.Package, expr ast.Expr) string {
 func parseType(tv interface{}) string {
 	switch t := tv.(type) {
 	case *types.Named:
-		return fmt.Sprintf("%s.%s", t.Obj().Pkg().Name(), t.Obj().Name())
+		if pkg := t.Obj().Pkg(); pkg == nil {
+			return t.Obj().Name()
+		} else {
+			return fmt.Sprintf("%s.%s", pkg.Name(), t.Obj().Name())
+		}
+
 	case *types.Slice:
 		return "[]" + parseType(t.Elem())
 	case *types.Pointer:

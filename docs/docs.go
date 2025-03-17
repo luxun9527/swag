@@ -15,25 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/account/addAccount": {
-            "post": {
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "responses": {
-                    "200": {
-                        "description": "成功",
-                        "schema": {
-                            "$ref": "#/definitions/model.Account"
-                        }
-                    }
-                }
-            }
-        },
-        "/account/getAccountInfo": {
+        "/account/login": {
             "get": {
                 "consumes": [
                     "application/json"
@@ -41,11 +23,63 @@ const docTemplate = `{
                 "produces": [
                     "application/json"
                 ],
+                "summary": "获取用户信息",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "请求参数",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "description": "请求参数",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.GetAccountInfoReq"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "成功",
                         "schema": {
-                            "$ref": "#/definitions/account.GetUserInfoResp"
+                            "$ref": "#/definitions/response.AccountInfo"
+                        }
+                    }
+                }
+            }
+        },
+        "/api/v1/base/register": {
+            "post": {
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "account"
+                ],
+                "summary": "注册",
+                "parameters": [
+                    {
+                        "description": "请求参数",
+                        "name": "data",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/request.GetAccountInfoReq"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "成功",
+                        "schema": {
+                            "$ref": "#/definitions/response.AccountInfo"
                         }
                     }
                 }
@@ -53,37 +87,22 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "account.GetUserInfoResp": {
+        "request.GetAccountInfoReq": {
             "type": "object",
             "properties": {
-                "accountId": {
+                "id": {
                     "type": "string"
                 },
-                "accountName": {
+                "name": {
                     "type": "string"
                 }
             }
         },
-        "model.Account": {
+        "response.AccountInfo": {
             "type": "object",
             "properties": {
-                "account_id": {
+                "name": {
                     "type": "string"
-                },
-                "account_name": {
-                    "type": "string"
-                },
-                "created_at": {
-                    "type": "integer"
-                },
-                "id": {
-                    "type": "integer"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "updated_at": {
-                    "type": "integer"
                 }
             }
         }

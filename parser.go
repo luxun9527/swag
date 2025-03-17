@@ -396,7 +396,7 @@ func (parser *Parser) ParseAPIMultiSearchDir(searchDirs []string, mainAPIFile st
 		if err != nil {
 			parser.debug.Printf("warning: failed to get package name in dir: %s, error: %s", searchDir, err.Error())
 		}
-		fdList = append(fdList, gin.ParseReqResp(searchDir)...)
+		fdList = append(fdList, gin.ParseDetail(searchDir)...)
 
 		err = parser.getAllGoFileInfo(packageDir, searchDir)
 		if err != nil {
